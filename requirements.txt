@@ -1,0 +1,2 @@
+textual>=0.47.0
+asyncua>=1.0.0
