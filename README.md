@@ -44,20 +44,20 @@ A terminal-based OPC-UA tag browser, live monitor, and headless CSV logger built
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/opcua-tag-browser.git
+git clone https://github.com/mitchsowa/opcua-tag-browser.git
 cd opcua-tag-browser
 
-# 2. Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-
-# 3. Install dependencies
+# 2. Create a virtual environment and install dependencies
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Both scripts auto-activate the `.venv` directory if it exists, so you can run them directly without manually activating the virtual environment first.
+
 **Optional convenience alias** (add to `~/.bashrc`):
 ```bash
-alias opcua='source ~/opcua-tag-browser/venv/bin/activate && python ~/opcua-tag-browser/opcua_tui.py'
+alias opcua='python ~/opcua-tag-browser/opcua_tui.py'
 ```
 
 ---
@@ -67,7 +67,6 @@ alias opcua='source ~/opcua-tag-browser/venv/bin/activate && python ~/opcua-tag-
 ### TUI Browser
 
 ```bash
-source venv/bin/activate
 python opcua_tui.py
 ```
 
@@ -163,7 +162,15 @@ sudo journalctl -fu opcua-logger    # follow live logs
 ### Copy logger to a remote device
 
 ```bash
-scp opcua_logger.py opcua_tui_profile.json user@192.168.10.254:~/
+scp opcua_logger.py requirements.txt opcua_tui_profile.json user@192.168.10.254:~/
+```
+
+On the remote device, create the `.venv` and install dependencies — after that the logger auto-activates the venv on its own:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+python opcua_logger.py
 ```
 
 ---
