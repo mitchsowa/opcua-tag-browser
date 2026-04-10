@@ -4,11 +4,20 @@ OPC-UA Tag Browser & Monitor — Terminal UI
 Requires: pip install textual asyncua
 """
 
+import os
+import sys
+from pathlib import Path
+
+# Auto-activate the .venv next to this script if not already running inside it
+_venv_dir = Path(__file__).resolve().parent / ".venv"
+_venv_python = _venv_dir / "bin" / "python"
+if _venv_python.exists() and os.environ.get("VIRTUAL_ENV") != str(_venv_dir):
+    os.environ["VIRTUAL_ENV"] = str(_venv_dir)
+    os.execv(str(_venv_python), [str(_venv_python)] + sys.argv)
+
 import asyncio
 import json
-import os
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 DEFAULT_PROFILE_PATH = Path(__file__).parent / "opcua_tui_profile.json"

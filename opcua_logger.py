@@ -13,19 +13,27 @@ Usage:
 Run as background process:
     nohup python opcua_logger.py &> logger.log &
     echo $! > logger.pid          # save PID to stop it later
-    kill $(cat logger.pid)        # stop it
 
-Run as a systemd service: see --print-service flag.
+Auto-activates .venv if present.
 """
+
+import os
+import sys
+from pathlib import Path
+
+# Auto-activate the .venv next to this script if not already running inside it
+_venv_dir = Path(__file__).resolve().parent / ".venv"
+_venv_python = _venv_dir / "bin" / "python"
+if _venv_python.exists() and os.environ.get("VIRTUAL_ENV") != str(_venv_dir):
+    os.environ["VIRTUAL_ENV"] = str(_venv_dir)
+    os.execv(str(_venv_python), [str(_venv_python)] + sys.argv)
 
 import argparse
 import asyncio
 import csv
 import json
 import signal
-import sys
 from datetime import datetime
-from pathlib import Path
 
 DEFAULT_PROFILE = Path(__file__).parent / "opcua_tui_profile.json"
 
