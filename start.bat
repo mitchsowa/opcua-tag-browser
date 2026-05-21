@@ -120,18 +120,27 @@ if not exist ".venv\Scripts\python.exe" (
 set "VENV_PY=.venv\Scripts\python.exe"
 
 rem --- 3. Install / verify dependencies ---
-"%VENV_PY%" -c "import textual, asyncua" >nul 2>&1
-if errorlevel 1 (
-    echo Installing dependencies from requirements.txt ...
+rem    Check imports AND that asyncua is >= 1.1.5. Older asyncua raises
+rem    "TypeError: issubclass() arg 1 must be a class" on connect under
+rem    Python 3.12+, because dataclasses.fields() returns string-form types
+rem    that older asyncua passes straight into issubclass().
+"%VENV_PY%" -c "import textual, asyncua; v=tuple(int(x) for x in asyncua.__version__.split('.')[:3]); raise SystemExit(0 if v >= (1,1,5) else 2)" >nul 2>&1
+set "DEPS_RC=%ERRORLEVEL%"
+if "%DEPS_RC%"=="0" (
+    echo Dependencies OK.
+) else (
+    if "%DEPS_RC%"=="2" (
+        echo Upgrading asyncua - installed version is too old for this Python ...
+    ) else (
+        echo Installing dependencies from requirements.txt ...
+    )
     "%VENV_PY%" -m pip install --upgrade pip >nul
-    "%VENV_PY%" -m pip install -r requirements.txt
+    "%VENV_PY%" -m pip install --upgrade -r requirements.txt
     if errorlevel 1 (
         echo [ERROR] Dependency installation failed.
         pause
         exit /b 1
     )
-) else (
-    echo Dependencies OK.
 )
 
 rem --- 4. Launch the TUI ---
