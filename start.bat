@@ -15,8 +15,8 @@ rem --- 0. Ensure Windows Terminal, then relaunch under it ---
 rem    WT_SESSION is set automatically when running inside Windows Terminal.
 rem    OPCUA_RELAUNCHED is our own sentinel so we never loop more than once.
 if not defined WT_SESSION if not defined OPCUA_RELAUNCHED (
-    where wt.exe >nul 2>&1
-    if errorlevel 1 (
+    call :find_wt
+    if not defined WT_EXE (
         echo Windows Terminal not found - attempting install via winget ...
         where winget >nul 2>&1
         if errorlevel 1 (
@@ -32,15 +32,34 @@ if not defined WT_SESSION if not defined OPCUA_RELAUNCHED (
                 echo        Continuing in the legacy console.
                 echo.
             )
+            rem winget may need a moment to register the App Execution Alias
+            timeout /t 2 /nobreak >nul 2>&1
+            call :find_wt
         )
     )
-    where wt.exe >nul 2>&1
-    if not errorlevel 1 (
+    if defined WT_EXE (
         set "OPCUA_RELAUNCHED=1"
-        start "" wt.exe -d "%~dp0" cmd /c ""%~f0" %*"
+        start "" "!WT_EXE!" -d "%CD%" cmd /c "%~nx0" %*
         exit /b 0
+    ) else (
+        echo.
+        echo [INFO] Windows Terminal was installed but is not yet visible to this
+        echo        shell. Close this window and re-run start.bat - the next run
+        echo        will pick up Windows Terminal automatically.
+        echo        Continuing in the legacy console for now.
+        echo.
+        pause
     )
 )
+goto :after_wt
+
+:find_wt
+set "WT_EXE="
+for /f "delims=" %%I in ('where wt.exe 2^>nul') do if not defined WT_EXE set "WT_EXE=%%I"
+if not defined WT_EXE if exist "%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe" set "WT_EXE=%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe"
+exit /b 0
+
+:after_wt
 
 rem --- 1. Locate a working Python (3.10+) ---
 set "PY="
