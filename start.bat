@@ -39,8 +39,25 @@ if not defined WT_SESSION if not defined OPCUA_RELAUNCHED (
     )
     if defined WT_EXE (
         set "OPCUA_RELAUNCHED=1"
+        rem Make sure WindowsApps is on PATH so the App Execution Alias resolves
+        rem when we invoke wt.exe by bare name.
+        set "PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WindowsApps"
+        rem Strategy 1: bare name - lets ShellExecute resolve the App Execution
+        rem Alias. This is the strategy that works for freshly-installed WT.
+        start "" wt.exe -d "%CD%" cmd /c "%~nx0" %*
+        if not errorlevel 1 exit /b 0
+        rem Strategy 2: absolute path - works on systems where wt is a regular
+        rem exe rather than a reparse-point alias.
         start "" "!WT_EXE!" -d "%CD%" cmd /c "%~nx0" %*
-        exit /b 0
+        if not errorlevel 1 exit /b 0
+        echo.
+        echo [WARN] Windows Terminal is installed but could not be launched.
+        echo        Continuing in this console window. If you want the
+        echo        Windows Terminal experience, close this window, open a
+        echo        fresh cmd, and re-run start.bat.
+        echo.
+        rem Reset the sentinel so a future run can retry the relaunch.
+        set "OPCUA_RELAUNCHED="
     ) else (
         echo.
         echo [INFO] Windows Terminal was installed but is not yet visible to this
@@ -48,7 +65,6 @@ if not defined WT_SESSION if not defined OPCUA_RELAUNCHED (
         echo        will pick up Windows Terminal automatically.
         echo        Continuing in the legacy console for now.
         echo.
-        pause
     )
 )
 goto :after_wt
